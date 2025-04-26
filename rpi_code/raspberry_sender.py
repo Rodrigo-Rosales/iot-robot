@@ -18,7 +18,7 @@ logging.basicConfig(
 logger = logging.getLogger("RPi_Streamer")
 
 # --- Configuración ---
-HOST = '192.168.1.100'  # Reemplaza con la IP de tu laptop
+HOST = '192.168.18.2'  # Reemplaza con la IP de tu laptop
 PORT = 5000
 RESOLUTION = (640, 480)
 FPS_TARGET = 25
