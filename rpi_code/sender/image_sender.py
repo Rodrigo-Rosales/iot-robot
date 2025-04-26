@@ -1,7 +1,6 @@
 # rpi_code/sender/image_sender.py
 
 import socket
-import pickle
 import struct
 import cv2
 from config import LAPTOP_IP, PORT, FRAME_WIDTH, FRAME_HEIGHT
@@ -20,7 +19,11 @@ def send_frames():
             if not ret:
                 break
 
-            data = pickle.dumps(frame)
+            # Comprimir el frame antes de enviarlo
+            _, encoded_image = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 90])
+            data = encoded_image.tobytes()
+
+            # Empaquetar tamaño + datos
             message = struct.pack(">L", len(data)) + data
             client_socket.sendall(message)
 
