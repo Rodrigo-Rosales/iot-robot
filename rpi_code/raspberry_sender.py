@@ -127,7 +127,7 @@ def main():
         # Liberación de recursos
         cap.release()
         sock.close()
-        cv2.destroyAllWindows()
+        # cv2.destroyAllWindows()
         logger.info("Recursos liberados. Programa terminado.")
 
 if __name__ == "__main__":

@@ -1,4 +1,3 @@
-# laptop_receiver.py
 import socket
 import pickle
 import struct
@@ -23,18 +22,31 @@ def main():
             while True:
                 # Reconstruye el tamaño del frame
                 while len(data) < payload_size:
-                    packet = conn.recv(4 * 1024)  # Buffer de 4KB
-                    if not packet: break
+                    packet = conn.recv(4 * 1024)
+                    if not packet:
+                        break
                     data += packet
-                
+
+                if len(data) < payload_size:
+                    print("❌ Conexión cerrada antes de recibir tamaño del frame.")
+                    return  # o break para continuar con otros
+
+                # Extraer el tamaño del mensaje
                 packed_msg_size = data[:payload_size]
                 data = data[payload_size:]
                 msg_size = struct.unpack("Q", packed_msg_size)[0]
                 
                 # Reconstruye los datos del frame
                 while len(data) < msg_size:
-                    data += conn.recv(4 * 1024)
-                
+                    packet = conn.recv(4 * 1024)
+                    if not packet:
+                        break
+                    data += packet
+
+                if len(data) < msg_size:
+                    print("❌ Conexión cerrada antes de recibir el frame completo.")
+                    return  # o break para continuar con otros
+                                
                 frame_data = data[:msg_size]
                 data = data[msg_size:]
                 
