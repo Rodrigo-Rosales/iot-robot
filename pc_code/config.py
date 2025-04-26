@@ -4,4 +4,4 @@ PORT = 5000
 CONFIDENCE_THRESHOLD = 0.4
 FRAME_WIDTH = 640
 FRAME_HEIGHT = 480
-MODEL_PATH = 'models/best.pt'
+MODEL_PATH = 'pc_code/models/best.pt'

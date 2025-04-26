@@ -3,16 +3,21 @@
 from receiver.image_receiver import receive_frames
 from detection.detector import Detector
 import cv2
-from config import PORT
+from config import SHOW_RESULTS
 
 def main():
     detector = Detector()
-    frame_generator = receive_frames(PORT)
+    frame_generator = receive_frames()
 
     for frame in frame_generator:
-        annotated, _ = detector.detect(frame)
+        annotated, instruction = detector.detect(frame)
 
-        cv2.imshow('Detección', annotated)
+        if instruction:
+            print(f"[INSTRUCCIÓN] {instruction}")
+
+        if SHOW_RESULTS:
+            cv2.imshow("Detección + Seguimiento", annotated)
+
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 

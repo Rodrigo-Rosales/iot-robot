@@ -174,7 +174,11 @@ cython_debug/
 .pypirc
 
 # Ignorar archivos grandes de datasets
-pc_code/results/
 pc_code/datasets/
-pc_code/capturas_roboflow/
-pc_code/models/
+pc_code/models/model_reuslts
+pc_code/models/bestBIG.pt
+pc_code/testing_scripts
+pc_code/venv_pc
+
+rpi_code/testing_scripts/
+rpi_code/venv_rpi
