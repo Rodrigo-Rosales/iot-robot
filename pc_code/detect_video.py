@@ -3,7 +3,7 @@ import cv2
 import time
 
 # Ruta al modelo entrenado
-model = YOLO('C:/Users/Rodri/Desktop/School/proyecto_modular/iot-robot/pc_code/models/bestBIG.pt')
+model = YOLO('C:/Users/Rodri/Desktop/School/proyecto_modular/iot-robot/pc_code/models/best.pt')
 
 cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)

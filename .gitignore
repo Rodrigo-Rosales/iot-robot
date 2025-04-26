@@ -172,3 +172,9 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Ignorar archivos grandes de datasets
+pc_code/results/
+pc_code/datasets/
+pc_code/capturas_roboflow/
+pc_code/models/
