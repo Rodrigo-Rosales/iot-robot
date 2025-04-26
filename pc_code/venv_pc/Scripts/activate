@@ -38,7 +38,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="C:\Users\Rodri\Desktop\School\Proyecto Modular\iot-robot\pc_code\venv_pc"
+VIRTUAL_ENV="C:\Users\Rodri\Desktop\School\proyecto_modular\iot-robot\pc_code\venv_pc"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"
