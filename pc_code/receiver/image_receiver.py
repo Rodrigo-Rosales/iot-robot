@@ -3,7 +3,7 @@
 import socket
 import pickle
 import struct
-from pc_code.config import PORT
+from config import PORT
 
 def receive_frames():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

@@ -3,7 +3,7 @@
 from ultralytics import YOLO
 import cv2
 import time
-from pc_code.config import MODEL_PATH, CONFIDENCE_THRESHOLD, FRAME_WIDTH
+from config import MODEL_PATH, CONFIDENCE_THRESHOLD, FRAME_WIDTH
 
 class Detector:
     def __init__(self):
