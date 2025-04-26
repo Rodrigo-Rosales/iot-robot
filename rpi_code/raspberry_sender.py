@@ -114,10 +114,10 @@ def main():
                     start_time = time.time()
             
             # Preview local (opcional)
-            cv2.imshow("RPi Stream", frame)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                logger.info("Transmisión detenida por el usuario")
-                break
+            # cv2.imshow("RPi Stream", frame)
+            # if cv2.waitKey(1) & 0xFF == ord('q'):
+            #     logger.info("Transmisión detenida por el usuario")
+            #     break
                 
     except KeyboardInterrupt:
         logger.info("Interrupción por teclado recibida")
