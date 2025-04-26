@@ -1,34 +1,35 @@
 # rpi_code/sender/image_sender.py
 
 import socket
-import struct
 import cv2
-from config import LAPTOP_IP, PORT, FRAME_WIDTH, FRAME_HEIGHT
+import struct
+from config import SERVER_IP, SERVER_PORT, FRAME_WIDTH, FRAME_HEIGHT, JPEG_QUALITY
 
-def send_frames():
-    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client_socket.connect((LAPTOP_IP, PORT))
+# Inicializar la cámara
+cap = cv2.VideoCapture(0)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, FRAME_WIDTH)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT)
 
-    cap = cv2.VideoCapture(0)
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, FRAME_WIDTH)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT)
+# Inicializar socket
+client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+client_socket.connect((SERVER_IP, SERVER_PORT))
 
-    try:
-        while True:
-            ret, frame = cap.read()
-            if not ret:
-                break
+try:
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
 
-            # Comprimir el frame antes de enviarlo
-            _, encoded_image = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 90])
-            data = encoded_image.tobytes()
+        # Comprimir frame a JPEG
+        encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), JPEG_QUALITY]
+        result, encoded_image = cv2.imencode('.jpg', frame, encode_param)
+        data = encoded_image.tobytes()
 
-            # Empaquetar tamaño + datos
-            message = struct.pack(">L", len(data)) + data
-            client_socket.sendall(message)
+        # Enviar longitud y luego datos
+        client_socket.sendall(struct.pack(">L", len(data)) + data)
 
-    except KeyboardInterrupt:
-        print("\n[INFO] Interrumpido.")
-    finally:
-        cap.release()
-        client_socket.close()
+except KeyboardInterrupt:
+    print("Interrupción del programa (sender).")
+finally:
+    cap.release()
+    client_socket.close()

@@ -1,6 +1,10 @@
 # rpi_code/config.py
 
-LAPTOP_IP = '192.168.18.2'
-PORT = 5000
-FRAME_WIDTH = 640
-FRAME_HEIGHT = 480
+# Configuración del envío de video
+SERVER_IP = '192.168.18.2'  # IP de la PC que recibe
+SERVER_PORT = 9999          # Puerto de conexión
+
+# Configuración de la cámara
+FRAME_WIDTH = 320
+FRAME_HEIGHT = 240
+JPEG_QUALITY = 80  # Calidad de la compresión JPEG
