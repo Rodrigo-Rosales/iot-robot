@@ -4,7 +4,7 @@ import socket
 import pickle
 import struct
 import cv2
-from rpi_code.config import LAPTOP_IP, PORT, FRAME_WIDTH, FRAME_HEIGHT
+from config import LAPTOP_IP, PORT, FRAME_WIDTH, FRAME_HEIGHT
 
 def send_frames():
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
