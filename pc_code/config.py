@@ -11,4 +11,4 @@ FRAME_SKIP_ENABLED = True  # Activar frame skipping para reducir latencia
 
 CONFIDENCE_THRESHOLD = 0.4
 SHOW_RESULTS = True
-MODEL_PATH = 'pc_code/models/best.pt'
+MODEL_PATH = 'C:/Users/Rodri/Desktop/School/proyecto-modular/iot-robot/pc_code/models/best.pt'
