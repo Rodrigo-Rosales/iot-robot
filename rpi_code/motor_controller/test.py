@@ -1,72 +1,137 @@
+# rpi_code/motor_controller/test.py
+
 import RPi.GPIO as GPIO
 import time
+import sys
+import tty
+import termios
+from math import ceil
 
-# Configuración de pines para Motor A
-ENA = 13  # GPIO12/PWM0 (Control de velocidad)
-IN1 = 19   # GPIO5 (Dirección)
-IN2 = 26   # GPIO6 (Dirección)
-
-# Configuración PWM
-PWM_FREQ = 1000  # Frecuencia PWM en Hz
-
-def setup():
-    GPIO.setmode(GPIO.BCM)
-    GPIO.setup(ENA, GPIO.OUT)
-    GPIO.setup(IN1, GPIO.OUT)
-    GPIO.setup(IN2, GPIO.OUT)
+class MotorController:
+    def __init__(self):
+        # Configuración de pines (BCM)
+        self.ENA = 13   # GPIO 12 (PWM0) o GPIO 13 (PWM1)
+        self.IN1 = 19   # GPIO 5 o # GPIO 19
+        self.IN2 = 26   # GPIO 6 o GPIO 26
+        
+        # Configuración motores
+        self.PWM_FREQ = 1000
+        self.MIN_PWM = 25    # Mínimo para que gire
+        self.MAX_PWM = 100
+        self.ACCELERATION = 5  # Incremento de velocidad por paso
+        
+        # Estado actual
+        self.current_speed = 0
+        self.current_direction = 1  # 1=adelante, -1=atrás
+        self.pwm = None
+        
+        self.setup()
     
-    # Inicializar PWM
-    pwm = GPIO.PWM(ENA, PWM_FREQ)
-    pwm.start(0)
-    return pwm
+    def setup(self):
+        """Inicializa GPIO y PWM"""
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(self.ENA, GPIO.OUT)
+        GPIO.setup(self.IN1, GPIO.OUT)
+        GPIO.setup(self.IN2, GPIO.OUT)
+        
+        self.pwm = GPIO.PWM(self.ENA, self.PWM_FREQ)
+        self.pwm.start(0)
+    
+    def set_motor(self, speed=None, direction=None):
+        """Control preciso del motor con aceleración suave"""
+        if speed is not None:
+            self.current_speed = max(self.MIN_PWM, min(self.MAX_PWM, speed))
+        if direction is not None:
+            self.current_direction = 1 if direction > 0 else -1
+        
+        # Aplicar cambios
+        GPIO.output(self.IN1, self.current_direction == 1)
+        GPIO.output(self.IN2, self.current_direction != 1)
+        self.pwm.ChangeDutyCycle(self.current_speed)
+        
+        self.display_status()
+    
+    def smooth_acceleration(self, target_speed):
+        """Aceleración/desaceleración progresiva"""
+        step = self.ACCELERATION if target_speed > self.current_speed else -self.ACCELERATION
+        for speed in range(self.current_speed, target_speed, step):
+            self.set_motor(speed=speed)
+            time.sleep(0.1)
+        self.set_motor(speed=target_speed)
+    
+    def stop_motor(self):
+        """Detención suave del motor"""
+        self.smooth_acceleration(0)
+        print("Motor detenido")
+    
+    def display_status(self):
+        """Muestra estado actual del motor"""
+        dir_icon = "▲" if self.current_direction == 1 else "▼"
+        print(f"\rMotor: {dir_icon} {self.current_speed}%", end="", flush=True)
+    
+    def cleanup(self):
+        """Limpieza de GPIO"""
+        self.stop_motor()
+        self.pwm.stop()
+        GPIO.cleanup()
+        print("\nSistema apagado correctamente")
 
-def motor_test(pwm):
+def get_key():
+    """Captura tecla presionada"""
+    fd = sys.stdin.fileno()
+    old_settings = termios.tcgetattr(fd)
     try:
-        print("Prueba de motor con L298N - Solo Motor A")
-        
-        # Test 1: Motor gira en una dirección al 50% de velocidad
-        print("\nGiro hacia adelante al 50%")
-        GPIO.output(IN1, GPIO.HIGH)
-        GPIO.output(IN2, GPIO.LOW)
-        pwm.ChangeDutyCycle(25)
-        time.sleep(3)
-        
-        # Test 2: Motor se detiene
-        print("Deteniendo motor")
-        pwm.ChangeDutyCycle(0)
-        time.sleep(3)
-        
-        # Test 3: Motor gira en dirección contraria al 75%
-        print("\nGiro hacia atrás al 75%")
-        GPIO.output(IN1, GPIO.LOW)
-        GPIO.output(IN2, GPIO.HIGH)
-        pwm.ChangeDutyCycle(75)
-        time.sleep(3)
-        
-        # Test 4: Barrido de velocidad
-        print("\nBarrido de velocidad 0-100%")
-        GPIO.output(IN1, GPIO.HIGH)
-        GPIO.output(IN2, GPIO.LOW)
-        for speed in range(0, 101, 10):
-            pwm.ChangeDutyCycle(speed)
-            print(f"Velocidad: {speed}%")
-            time.sleep(0.5)
-        
-        # Detener motor
-        print("\nPrueba completada - Motor detenido")
-        pwm.ChangeDutyCycle(0)
-        GPIO.output(IN1, GPIO.LOW)
-        GPIO.output(IN2, GPIO.LOW)
-        
-    except KeyboardInterrupt:
-        print("\nPrueba interrumpida por el usuario")
+        tty.setraw(fd)
+        ch = sys.stdin.read(1)
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+    return ch
 
-def cleanup(pwm):
-    pwm.stop()
-    GPIO.cleanup()
-    print("GPIO limpiado")
+def main_control_loop():
+    """Bucle principal de control mejorado"""
+    motor = MotorController()
+    
+    print("\nCONTROL AVANZADO DE MOTOR")
+    print("-----------------------")
+    print("Flechas: Control dirección y velocidad")
+    print("[+]/[-]: Ajuste fino de velocidad")
+    print("[Space]: Detención suave")
+    print("[Q]: Salir\n")
+    
+    try:
+        while True:
+            key = get_key()
+            
+            # Secuencias especiales (flechas)
+            if key == '\x1b':
+                key += sys.stdin.read(2)
+            
+            # Comandos
+            if key == '\x1b[A':  # Flecha arriba
+                motor.set_motor(direction=1)
+            elif key == '\x1b[B':  # Flecha abajo
+                motor.set_motor(direction=-1)
+            elif key == '\x1b[C':  # Flecha derecha
+                new_speed = min(motor.current_speed + 10, motor.MAX_PWM)
+                motor.smooth_acceleration(new_speed)
+            elif key == '\x1b[D':  # Flecha izquierda
+                new_speed = max(motor.current_speed - 10, motor.MIN_PWM)
+                motor.smooth_acceleration(new_speed)
+            elif key == '+':
+                new_speed = min(motor.current_speed + 5, motor.MAX_PWM)
+                motor.set_motor(speed=new_speed)
+            elif key == '-':
+                new_speed = max(motor.current_speed - 5, motor.MIN_PWM)
+                motor.set_motor(speed=new_speed)
+            elif key == ' ':
+                motor.stop_motor()
+            elif key.lower() == 'q':
+                break
+                
+    except KeyboardInterrupt:
+        pass
+    finally:
+        motor.cleanup()
 
 if __name__ == "__main__":
-    pwm = setup()
-    motor_test(pwm)
-    cleanup(pwm)
+    main_control_loop()
