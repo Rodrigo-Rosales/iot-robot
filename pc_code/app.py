@@ -16,7 +16,7 @@ def main():
             print(f"[INSTRUCCIÓN] {instruction}")
 
         if SHOW_RESULTS:
-            cv2.imshow("Detección + Seguimiento", annotated)
+            cv2.imshow("Deteccion + Seguimiento", annotated)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break

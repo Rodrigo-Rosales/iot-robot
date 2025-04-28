@@ -68,7 +68,7 @@ def receive_frames():
                 finally:
                     conn.setblocking(1)
 
-            # 🔥 Yield del último frame listo
+            # Yield del último frame listo
             yield frame
 
     except KeyboardInterrupt:
