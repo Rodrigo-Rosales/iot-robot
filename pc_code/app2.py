@@ -1,26 +1,9 @@
-# pc_code/app.py
+# pc_code/app_pruebas.py
 
 from receiver.image_receiver import receive_frames
 from detection.detector import Detector
 import cv2
-import time
-import socket
-import json
-import struct
-from config import SHOW_RESULTS, RASPBERRY_PI_IP, RASPBERRY_PI_PORT_CONTROL, \
-    WHEEL_BASE, KP_ANGULAR, KP_LINEAR, AREA_TARGUET, MAX_PWM, MIN_PWM
-
-def send_control_command(left_pwm, right_pwm):
-    """Envía los comandos PWM a la Raspberry Pi."""
-    try:
-        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client_socket.connect((RASPBERRY_PI_IP, RASPBERRY_PI_PORT_CONTROL))
-        command = {'left_pwm': left_pwm, 'right_pwm': right_pwm}
-        command_json = json.dumps(command).encode('utf-8')
-        client_socket.sendall(struct.pack(">L", len(command_json)) + command_json)
-        client_socket.close()
-    except Exception as e:
-        print(f"[ERROR] No se pudo enviar el comando de control: {e}")
+from config import SHOW_RESULTS, WHEEL_BASE, KP_ANGULAR, KP_LINEAR, AREA_TARGUET, MAX_PWM, MIN_PWM
 
 def main():
     detector = Detector()
@@ -54,17 +37,13 @@ def main():
                 pwm_right = max(MIN_PWM, min(MAX_PWM, pwm_right))
                 pwm_left = max(MIN_PWM, min(MAX_PWM, pwm_left))
 
-                print(f"[CONTROL] PWM Izquierda: {pwm_left:.2f}, PWM Derecha: {pwm_right:.2f}")
-
-                # --- Enviar comandos de control ---
-                send_control_command(int(left_pwm), int(right_pwm))
+                print(f"[PRUEBA CONTROL] PWM Izquierda: {pwm_left:.2f}, PWM Derecha: {pwm_right:.2f}")
 
             else:
-                # Si no se detecta el balón, detener el robot
-                send_control_command(0, 0)
+                print("[PRUEBA CONTROL] No se detecta el balón, PWM Izquierda: 0, PWM Derecha: 0")
 
             if SHOW_RESULTS:
-                cv2.imshow("Deteccion + Seguimiento", annotated)
+                cv2.imshow("Deteccion + Seguimiento (PRUEBA)", annotated)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
