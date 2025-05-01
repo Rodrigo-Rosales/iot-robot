@@ -2,62 +2,28 @@
 
 from receiver.image_receiver import receive_frames
 from detection.detector import Detector
+from sender.control_sender import send_control_command
+from control.controller import Controller
 import cv2
-import time
-import socket
-import json
-import struct
-from config import SHOW_RESULTS, RASPBERRY_PI_IP, RASPBERRY_PI_PORT_CONTROL, \
-    WHEEL_BASE, KP_ANGULAR, KP_LINEAR, AREA_TARGUET, MAX_PWM, MIN_PWM
-
-def send_control_command(left_pwm, right_pwm):
-    """Envía los comandos PWM a la Raspberry Pi."""
-    try:
-        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client_socket.connect((RASPBERRY_PI_IP, RASPBERRY_PI_PORT_CONTROL))
-        command = {'left_pwm': left_pwm, 'right_pwm': right_pwm}
-        command_json = json.dumps(command).encode('utf-8')
-        client_socket.sendall(struct.pack(">L", len(command_json)) + command_json)
-        client_socket.close()
-    except Exception as e:
-        print(f"[ERROR] No se pudo enviar el comando de control: {e}")
+from config import SHOW_RESULTS
 
 def main():
     detector = Detector()
     frame_generator = receive_frames()
+    controller = Controller()
 
     for frame in frame_generator:
         detection_output = detector.detect(frame)
         for annotated, error_x, error_y, area, bbox_info in detection_output:
-            linear_speed = 0.0
-            angular_speed = 0.0
-
-            if error_x is not None and area is not None:
+            if error_x is not None and error_y is not None and area is not None:
                 print(f"[DETECCIÓN] Error X: {error_x:.2f}, Error Y: {error_y:.2f}, Area: {area:.2f}, BBox Info: {bbox_info}")
 
-                # --- Lógica de Control ---
-                angular_speed = KP_ANGULAR * error_x
-                error_area = AREA_TARGUET - area
-                linear_speed = KP_LINEAR * error_area
-
-                # --- Modelo Cinemático Inverso (Velocidades de las ruedas - lineal) ---
-                v_right = linear_speed + (WHEEL_BASE / 2) * angular_speed
-                v_left = linear_speed - (WHEEL_BASE / 2) * angular_speed
-
-                # --- Escalar a PWM (Esto es una aproximación y necesita calibración) ---
-                # Asumimos que las velocidades están en un rango que se puede escalar a PWM
-                # Necesitarás experimentar con estos factores de escala
-                pwm_right = v_right * 50  # Factor de escala inicial
-                pwm_left = v_left * 50   # Factor de escala inicial
-
-                # Limitar PWM
-                pwm_right = max(MIN_PWM, min(MAX_PWM, pwm_right))
-                pwm_left = max(MIN_PWM, min(MAX_PWM, pwm_left))
-
-                print(f"[CONTROL] PWM Izquierda: {pwm_left:.2f}, PWM Derecha: {pwm_right:.2f}")
+                # --- Lógica de Control (usando el Controller) ---
+                left_pwm, right_pwm = controller.calculate_pwm(error_x, error_y, area)
+                print(f"[CONTROL] PWM Izquierdo: {left_pwm}, PWM Derecho: {right_pwm}")
 
                 # --- Enviar comandos de control ---
-                send_control_command(int(left_pwm), int(right_pwm))
+                send_control_command(left_pwm, right_pwm)
 
             else:
                 # Si no se detecta el balón, detener el robot
