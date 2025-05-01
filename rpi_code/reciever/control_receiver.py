@@ -1,30 +1,30 @@
-# rpi_code/app.py
+# rpi_code/receiver/control_receiver.py
 
-from sender.image_sender import send_frames
-from motor_controller.motor_controller import MotorController
 import socket
 import struct
 import json
-import threading
 from config import RASPBERRY_PI_IP_CONTROL_RECEIVER, RASPBERRY_PI_PORT_CONTROL
 
-def receive_commands(motor_controller):
-    """Recibe comandos PWM desde la laptop y controla los motores."""
+def receive_control_commands():
+    """
+    Establishes a TCP server to receive control commands (PWM values)
+    from the laptop and yields them as a dictionary.
+    """
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind((RASPBERRY_PI_IP_CONTROL_RECEIVER, RASPBERRY_PI_PORT_CONTROL))
     server_socket.listen(1)
-    print(f"[RPI CONTROL] Esperando comandos en {RASPBERRY_PI_IP_CONTROL_RECEIVER}:{RASPBERRY_PI_PORT_CONTROL}...")
+    print(f"[RPI RECEIVER] Esperando comandos en {RASPBERRY_PI_IP_CONTROL_RECEIVER}:{RASPBERRY_PI_PORT_CONTROL}...")
 
     connection, client_address = server_socket.accept()
     try:
-        print(f"[RPI CONTROL] Conexión establecida con {client_address}")
+        print(f"[RPI RECEIVER] Conexión establecida con {client_address}")
         data = b''
         payload_size = struct.calcsize(">L")
         while True:
             while len(data) < payload_size:
                 packet = connection.recv(4096)
                 if not packet:
-                    return
+                    return  # Connection closed by the client
                 data += packet
 
             packed_msg_size = data[:payload_size]
@@ -43,27 +43,30 @@ def receive_commands(motor_controller):
                 right_pwm = command.get('right_pwm')
 
                 if left_pwm is not None and right_pwm is not None:
-                    print(f"[RPI CONTROL] Recibidos: PWM Izquierda = {left_pwm}, PWM Derecha = {right_pwm}")
-                    motor_controller.set_speeds(left_pwm, right_pwm)
+                    yield {'left_pwm': left_pwm, 'right_pwm': right_pwm}
                 else:
-                    print("[RPI CONTROL] Comando inválido recibido.")
+                    print("[RPI RECEIVER] Comando inválido recibido.")
 
             except json.JSONDecodeError as e:
-                print(f"[RPI CONTROL] Error al decodificar JSON: {e}")
+                print(f"[RPI RECEIVER] Error al decodificar JSON: {e}")
             except Exception as e:
-                print(f"[RPI CONTROL] Error al procesar el comando: {e}")
+                print(f"[RPI RECEIVER] Error al procesar el comando: {e}")
 
     except KeyboardInterrupt:
-        print("[RPI CONTROL] Control detenido por el usuario.")
+        print("[RPI RECEIVER] Recepción de comandos detenida por el usuario.")
     finally:
         connection.close()
         server_socket.close()
-        motor_controller.cleanup()
 
 if __name__ == "__main__":
+    # This part is for testing the receiver independently
+    from motor_controller.motor_controller import MotorController
     motor_controller = MotorController()
-    control_thread = threading.Thread(target=receive_commands, args=(motor_controller,))
-    control_thread.daemon = True  # Terminar el hilo cuando el programa principal termine
-    control_thread.start()
-
-    send_frames()
+    try:
+        for command in receive_control_commands():
+            print(f"[RPI RECEIVER TEST] Received command: {command}")
+            motor_controller.set_speeds(command['left_pwm'], command['right_pwm'])
+    except Exception as e:
+        print(f"[RPI RECEIVER TEST] Error: {e}")
+    finally:
+        motor_controller.cleanup()
