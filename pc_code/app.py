@@ -2,7 +2,7 @@
 
 from receiver.image_receiver import receive_frames
 from detection.detector import Detector
-from sender.control_sender import send_control_command
+from sender.control_sender import ControlSender  # Importa la clase ControlSender
 from control.controller import Controller
 import cv2
 from config import SHOW_RESULTS
@@ -11,31 +11,38 @@ def main():
     detector = Detector()
     frame_generator = receive_frames()
     controller = Controller()
+    control_sender = ControlSender()  # Crea una instancia de ControlSender
 
-    for frame in frame_generator:
-        detection_output = detector.detect(frame)
-        for annotated, error_x, error_y, area, bbox_info in detection_output:
+    if not control_sender.connect():
+        print("[APP PC] No se pudo conectar al robot para comandos de control. Saliendo.")
+        return
+
+    try:
+        for frame in frame_generator:
+            results = detector.detect(frame)
+            bbox_info = detector.get_bbox_info(results)
+
+            error_x = bbox_info.get('error_x')
+            error_y = bbox_info.get('error_y')
+            area = bbox_info.get('area')
+
             if error_x is not None and error_y is not None and area is not None:
-                print(f"[DETECCIÓN] Error X: {error_x:.2f}, Error Y: {error_y:.2f}, Area: {area:.2f}, BBox Info: {bbox_info}")
-
-                # --- Lógica de Control (usando el Controller) ---
                 left_pwm, right_pwm = controller.calculate_pwm(error_x, error_y, area)
-                print(f"[CONTROL] PWM Izquierdo: {left_pwm}, PWM Derecho: {right_pwm}")
-
-                # --- Enviar comandos de control ---
-                send_control_command(left_pwm, right_pwm)
-
+                control_sender.send_command(left_pwm, right_pwm)
             else:
-                # Si no se detecta el balón, detener el robot
-                send_control_command(0, 0)
+                control_sender.send_command(0, 0)
 
             if SHOW_RESULTS:
-                cv2.imshow("Deteccion + Seguimiento", annotated)
+                detector.draw_detections(frame, results)
+                cv2.imshow("Frame con Detección", frame)
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
 
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-
-    cv2.destroyAllWindows()
+    except KeyboardInterrupt:
+        print("[APP PC] Deteniendo...")
+    finally:
+        control_sender.close()  # Cierra la conexión al finalizar
+        cv2.destroyAllWindows()
 
 if __name__ == "__main__":
     main()

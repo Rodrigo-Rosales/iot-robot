@@ -28,8 +28,8 @@ class Controller:
         v_left = linear_speed - (self.wheel_base / 2) * angular_speed
 
         # Escalar a PWM (Aproximación inicial - necesita calibración)
-        pwm_right = v_right * 50
-        pwm_left = v_left * 50
+        pwm_right = v_right * 5
+        pwm_left = v_left * 5
 
         # Limitar PWM
         pwm_right = max(self.min_pwm, min(self.max_pwm, pwm_right))

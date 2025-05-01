@@ -3,7 +3,8 @@
 import socket
 import cv2
 import struct
-from config import SERVER_IP, SERVER_PORT, FRAME_WIDTH, FRAME_HEIGHT, JPEG_QUALITY
+import time
+from config import SERVER_IP, SERVER_PORT, FRAME_WIDTH, FRAME_HEIGHT, JPEG_QUALITY, FPS_SEND
 
 def send_frames():
     # Inicializar la cámara
@@ -13,7 +14,12 @@ def send_frames():
 
     # Inicializar socket
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client_socket.connect((SERVER_IP, SERVER_PORT))
+    client_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)  # Deshabilitar Nagle
+    try:
+        client_socket.connect((SERVER_IP, SERVER_PORT))
+    except Exception as e:
+        print(f"[RPI VIDEO SENDER] Error al conectar: {e}")
+        return
 
     try:
         while True:
@@ -27,7 +33,13 @@ def send_frames():
             data = encoded_image.tobytes()
 
             # Enviar longitud y luego datos
-            client_socket.sendall(struct.pack(">L", len(data)) + data)
+            try:
+                client_socket.sendall(struct.pack(">L", len(data)) + data)
+            except Exception as e:
+                print(f"[RPI VIDEO SENDER] Error al enviar frame: {e}")
+                break
+
+            time.sleep(1 / FPS_SEND)  # Control explícito de la tasa de frames
 
     except KeyboardInterrupt:
         print("Interrupción del programa (sender).")

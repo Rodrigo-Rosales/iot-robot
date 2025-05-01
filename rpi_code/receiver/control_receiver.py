@@ -8,7 +8,7 @@ from config import RASPBERRY_PI_IP_CONTROL_RECEIVER, RASPBERRY_PI_PORT_CONTROL
 def receive_control_commands():
     """
     Establishes a TCP server to receive control commands (PWM values)
-    from the laptop and yields them as a dictionary.
+    from the laptop and yields them as a dictionary over a persistent connection.
     """
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind((RASPBERRY_PI_IP_CONTROL_RECEIVER, RASPBERRY_PI_PORT_CONTROL))
@@ -16,8 +16,9 @@ def receive_control_commands():
     print(f"[RPI RECEIVER] Esperando comandos en {RASPBERRY_PI_IP_CONTROL_RECEIVER}:{RASPBERRY_PI_PORT_CONTROL}...")
 
     connection, client_address = server_socket.accept()
+    connection.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)  # Deshabilitar Nagle
+    print(f"[RPI RECEIVER] Conexión establecida con {client_address}")
     try:
-        print(f"[RPI RECEIVER] Conexión establecida con {client_address}")
         data = b''
         payload_size = struct.calcsize(">L")
         while True:
@@ -32,7 +33,10 @@ def receive_control_commands():
             msg_size = struct.unpack(">L", packed_msg_size)[0]
 
             while len(data) < msg_size:
-                data += connection.recv(4096)
+                packet = connection.recv(4096)
+                if not packet:
+                    return  # Connection closed by the client
+                data += packet
 
             command_data = data[:msg_size]
             data = data[msg_size:]

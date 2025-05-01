@@ -2,77 +2,45 @@
 
 import socket
 import struct
-import numpy as np
 import cv2
-from config import HOST, PORT, FRAME_SKIP_ENABLED
+import numpy as np
+from config import PC_IP, PC_PORT_VIDEO, FRAME_WIDTH, FRAME_HEIGHT
 
 def receive_frames():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind((HOST, PORT))
+    server_socket.bind((PC_IP, PC_PORT_VIDEO))
     server_socket.listen(1)
-    print(f"[INFO] Esperando conexión en {HOST}:{PORT}...")
-
-    conn, addr = server_socket.accept()
-    print(f"[INFO] Conexión establecida con {addr}")
-
-    data = b''
-    payload_size = struct.calcsize(">L")
-
+    print(f"[INFO] Esperando conexión en {PC_IP}:{PC_PORT_VIDEO}...")
+    connection, client_address = server_socket.accept()
+    print(f"[INFO] Conexión establecida con {client_address}")
+    connection.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)  # Deshabilitar Nagle
     try:
         while True:
-            while len(data) < payload_size:
-                packet = conn.recv(4096)
-                if not packet:
-                    return
-                data += packet
-
-            packed_msg_size = data[:payload_size]
-            data = data[payload_size:]
-            msg_size = struct.unpack(">L", packed_msg_size)[0]
-
-            while len(data) < msg_size:
-                data += conn.recv(4096)
-
-            frame_data = data[:msg_size]
-            data = data[msg_size:]
-
-            # Decodificar frame
-            nparr = np.frombuffer(frame_data, np.uint8)
-            frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-
-            # FRAME SKIPPING IMPLEMENTADO
-            if FRAME_SKIP_ENABLED:
-                conn.setblocking(0)
-                try:
-                    while True:
-                        next_packet = conn.recv(4096)
-                        if not next_packet:
-                            break
-                        data += next_packet
-
-                        while len(data) >= payload_size:
-                            packed_msg_size = data[:payload_size]
-                            if len(data) < payload_size + struct.unpack(">L", packed_msg_size)[0]:
-                                break
-
-                            msg_size = struct.unpack(">L", packed_msg_size)[0]
-                            data = data[payload_size:]
-                            frame_data = data[:msg_size]
-                            data = data[msg_size:]
-
-                            nparr = np.frombuffer(frame_data, np.uint8)
-                            frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-
-                except BlockingIOError:
-                    pass
-                finally:
-                    conn.setblocking(1)
-
-            # Yield del último frame listo
-            yield frame
-
-    except KeyboardInterrupt:
-        print("[INFO] Interrupción manual (receiver).")
+            size_bytes = connection.recv(4)
+            if not size_bytes:
+                break
+            frame_size = struct.unpack(">L", size_bytes)[0]
+            frame_data = b""
+            while len(frame_data) < frame_size:
+                part = connection.recv(4096)
+                if not part:
+                    break
+                data += part  # Corregido: acumular en 'data'
+            if data:
+                frame = cv2.imdecode(np.frombuffer(data, dtype=np.uint8), cv2.IMREAD_COLOR)
+                if frame is not None and frame.shape == (FRAME_HEIGHT, FRAME_WIDTH, 3):
+                    yield frame
+                else:
+                    print("[WARNING] Frame recibido incompleto o con dimensiones incorrectas.")
+    except Exception as e:
+        print(f"[ERROR RECEIVER] Error en la conexión: {e}")
     finally:
-        conn.close()
+        connection.close()
         server_socket.close()
+
+if __name__ == '__main__':
+    for frame in receive_frames():
+        cv2.imshow("Received Frame", frame)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+    cv2.destroyAllWindows()

@@ -15,8 +15,9 @@ class Detector:
         self.margin_x = 50
 
     def detect(self, frame):
-        start_time = time.time()
+        start_time_total = time.time()
         results = self.model.predict(source=frame, conf=CONFIDENCE_THRESHOLD, save=False, verbose=False)
+        inference_time = time.time() - start_time_total
         annotated = results[0].plot()
 
         boxes = results[0].boxes
@@ -48,9 +49,10 @@ class Detector:
             # Dibujar bbox
             cv2.rectangle(annotated, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
-        # FPS
-        fps = 1.0 / (time.time() - start_time)
-        cv2.putText(annotated, f"FPS: {fps:.1f}", (10, 30),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 0), 2)
+        # FPS (calculado al final de la función detect)
+        fps = 1.0 / (time.time() - start_time_total)
+        cv2.putText(annotated, f"FPS (detect): {fps:.1f}", (10, 60),  # Cambiamos la posición Y para diferenciar
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+        print(f"[DETECTOR] Tiempo de inferencia: {inference_time:.3f} segundos")
 
         yield annotated, error_x, error_y, area, bbox_info

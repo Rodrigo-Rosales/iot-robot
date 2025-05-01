@@ -21,7 +21,7 @@ class MotorController:
         self.PWM_FREQ = 1000        # Frecuencia PWM en Hz
         self.PWM_INICIO = 50         # PWM mínimo para vencer la fricción estática
         self.PWM_MINIMO = 30           # PWM mínimo una vez en movimiento
-        self.PWM_MAXIMO = 100          # PWM máximo
+        self.PWM_MAXIMO = 60          # PWM máximo
         self.PASO_ACELERACION = 5         # Paso de aceleración
         self.RETARDO_ACELERACION = 0.1      # Retardo entre pasos de aceleración
 

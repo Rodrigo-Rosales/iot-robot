@@ -21,7 +21,7 @@ RASPBERRY_PI_PORT_CONTROL = 12346        # Puerto para el control (debe coincidi
 WHEEL_BASE = 0.18  # Distancia entre ruedas en metros
 
 # --- Ganancias del Controlador ---
-KP_ANGULAR = 0.05
+KP_ANGULAR = 0.005
 KP_LINEAR = 0.0005
 KP_VERTICAL = 0.0005
 AREA_TARGUET = 5000
