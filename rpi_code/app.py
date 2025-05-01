@@ -1,69 +1,38 @@
 # rpi_code/app.py
 
 from sender.image_sender import send_frames
+from receiver.control_receiver import receive_control_commands
 from motor_controller.motor_controller import MotorController
-import socket
-import struct
-import json
 import threading
-from config import RASPBERRY_PI_IP_CONTROL_RECEIVER, RASPBERRY_PI_PORT_CONTROL
-
-def receive_commands(motor_controller):
-    """Recibe comandos PWM desde la laptop y controla los motores."""
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind((RASPBERRY_PI_IP_CONTROL_RECEIVER, RASPBERRY_PI_PORT_CONTROL))
-    server_socket.listen(1)
-    print(f"[RPI CONTROL] Esperando comandos en {RASPBERRY_PI_IP_CONTROL_RECEIVER}:{RASPBERRY_PI_PORT_CONTROL}...")
-
-    connection, client_address = server_socket.accept()
-    try:
-        print(f"[RPI CONTROL] Conexión establecida con {client_address}")
-        data = b''
-        payload_size = struct.calcsize(">L")
-        while True:
-            while len(data) < payload_size:
-                packet = connection.recv(4096)
-                if not packet:
-                    return
-                data += packet
-
-            packed_msg_size = data[:payload_size]
-            data = data[payload_size:]
-            msg_size = struct.unpack(">L", packed_msg_size)[0]
-
-            while len(data) < msg_size:
-                data += connection.recv(4096)
-
-            command_data = data[:msg_size]
-            data = data[msg_size:]
-
-            try:
-                command = json.loads(command_data.decode('utf-8'))
-                left_pwm = command.get('left_pwm')
-                right_pwm = command.get('right_pwm')
-
-                if left_pwm is not None and right_pwm is not None:
-                    print(f"[RPI CONTROL] Recibidos: PWM Izquierda = {left_pwm}, PWM Derecha = {right_pwm}")
-                    motor_controller.set_speeds(left_pwm, right_pwm)
-                else:
-                    print("[RPI CONTROL] Comando inválido recibido.")
-
-            except json.JSONDecodeError as e:
-                print(f"[RPI CONTROL] Error al decodificar JSON: {e}")
-            except Exception as e:
-                print(f"[RPI CONTROL] Error al procesar el comando: {e}")
-
-    except KeyboardInterrupt:
-        print("[RPI CONTROL] Control detenido por el usuario.")
-    finally:
-        connection.close()
-        server_socket.close()
-        motor_controller.cleanup()
 
 if __name__ == "__main__":
     motor_controller = MotorController()
-    control_thread = threading.Thread(target=receive_commands, args=(motor_controller,))
-    control_thread.daemon = True  # Terminar el hilo cuando el programa principal termine
+
+    # Iniciar el hilo para recibir comandos de control
+    control_thread = threading.Thread(target=receive_control_loop, args=(motor_controller,))
+    control_thread.daemon = True
     control_thread.start()
 
+    # Iniciar el envío de frames en el hilo principal
     send_frames()
+
+    # Limpiar GPIO al finalizar (esto puede no ejecutarse si send_frames es un bucle infinito)
+    try:
+        while True:
+            pass  # Mantener el programa principal corriendo para que los hilos sigan activos
+    except KeyboardInterrupt:
+        print("[RPI APP] Deteniendo...")
+    finally:
+        motor_controller.cleanup()
+
+def receive_control_loop(motor_controller):
+    """Bucle para recibir comandos de control y aplicarlos a los motores."""
+    for command in receive_control_commands():
+        left_pwm = command.get('left_pwm')
+        right_pwm = command.get('right_pwm')
+
+        if left_pwm is not None and right_pwm is not None:
+            print(f"[RPI APP CONTROL] Recibidos PWM - Izquierda: {left_pwm}, Derecha: {right_pwm}")
+            motor_controller.set_speeds(left_pwm, right_pwm)
+        else:
+            print("[RPI APP CONTROL] Comando PWM inválido recibido.")
