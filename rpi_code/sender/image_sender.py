@@ -11,6 +11,7 @@ def send_frames():
     cap = cv2.VideoCapture(0)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, FRAME_WIDTH)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT)
+    cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)  # Intenta reducir el buffer de la cámara
 
     # Inicializar socket
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -23,6 +24,7 @@ def send_frames():
 
     try:
         while True:
+            start_time = time.time()
             ret, frame = cap.read()
             if not ret:
                 break
@@ -39,7 +41,9 @@ def send_frames():
                 print(f"[RPI VIDEO SENDER] Error al enviar frame: {e}")
                 break
 
-            time.sleep(1 / FPS_SEND)  # Control explícito de la tasa de frames
+            time_to_send = time.time() - start_time
+            sleep_time = max(0, (1 / FPS_SEND) - time_to_send)
+            time.sleep(sleep_time)
 
     except KeyboardInterrupt:
         print("Interrupción del programa (sender).")
