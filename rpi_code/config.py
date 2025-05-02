@@ -5,8 +5,8 @@ SERVER_IP = '192.168.0.10'  # IP de la PC que recibe
 SERVER_PORT = 9999          # Puerto de conexión
 
 # Configuración de la cámara
-FRAME_WIDTH = 320
-FRAME_HEIGHT = 240
+FRAME_WIDTH = 640
+FRAME_HEIGHT = 640
 JPEG_QUALITY = 60  # Calidad de la compresión JPEG
 FPS_SEND = 30  # Frames por segundo a enviar
 

@@ -5,8 +5,8 @@ HOST = '0.0.0.0'   # Recibe de cualquier IP
 PORT = 9999        # Puerto a escuchar
 
 # Configuración de procesamiento
-FRAME_WIDTH = 320
-FRAME_HEIGHT = 240
+FRAME_WIDTH = 640
+FRAME_HEIGHT = 640
 FRAME_SKIP_ENABLED = True  # Activar frame skipping para reducir latencia
 
 CONFIDENCE_THRESHOLD = 0.4
