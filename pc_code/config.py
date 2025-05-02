@@ -6,7 +6,7 @@ PORT = 9999        # Puerto a escuchar
 
 # Configuración de procesamiento
 FRAME_WIDTH = 640
-FRAME_HEIGHT = 640
+FRAME_HEIGHT = 480
 FRAME_SKIP_ENABLED = True  # Activar frame skipping para reducir latencia
 
 CONFIDENCE_THRESHOLD = 0.4
@@ -28,4 +28,4 @@ AREA_TARGUET = 5000
 
 # --- Rango de PWM (ajusta según tu MotorController) ---
 MAX_PWM = 100
-MIN_PWM = -100
+MIN_PWM = 0

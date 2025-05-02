@@ -6,8 +6,8 @@ SERVER_PORT = 9999          # Puerto de conexión
 
 # Configuración de la cámara
 FRAME_WIDTH = 640
-FRAME_HEIGHT = 640
-JPEG_QUALITY = 60  # Calidad de la compresión JPEG
+FRAME_HEIGHT = 480
+JPEG_QUALITY = 70  # Calidad de la compresión JPEG
 FPS_SEND = 30  # Frames por segundo a enviar
 
 # --- Configuración para recibir comandos de control ---
