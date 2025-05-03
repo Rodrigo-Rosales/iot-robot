@@ -9,7 +9,7 @@ FRAME_WIDTH = 640
 FRAME_HEIGHT = 480
 FRAME_SKIP_ENABLED = True  # Activar frame skipping para reducir latencia
 
-CONFIDENCE_THRESHOLD = 0.4
+CONFIDENCE_THRESHOLD = 0.5
 SHOW_RESULTS = True
 MODEL_PATH = 'C:/Users/Rodri/Desktop/School/proyecto-modular/iot-robot/pc_code/models/best.pt'
 

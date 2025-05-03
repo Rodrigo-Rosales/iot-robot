@@ -25,8 +25,11 @@ class Detector:
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         tensor_frame = torch.from_numpy(rgb_frame).permute(2, 0, 1).float().unsqueeze(0).to(self.device)
 
+        # Normalizar el tensor al rango 0.0-1.0
+        normalized_tensor = tensor_frame / 255.0
+
         # Realizar la predicción
-        results = self.model.predict(source=tensor_frame, conf=CONFIDENCE_THRESHOLD, save=False, verbose=False)
+        results = self.model.predict(source=normalized_tensor, conf=CONFIDENCE_THRESHOLD, save=False, verbose=False)
         inference_time = time.time() - start_time_total
         annotated = results[0].plot() # annotated frame.
 
@@ -70,7 +73,7 @@ class Detector:
         # FPS (calculado al final de la función detect)
         fps = 1.0 / (time.time() - start_time_total)
         cv2.putText(annotated, f"FPS (detect): {fps:.1f}", (10, 60),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
         print(f"[DETECTOR] Tiempo de inferencia: {inference_time:.3f} segundos")
 
         yield annotated, error_x, error_y, area, bbox_info
