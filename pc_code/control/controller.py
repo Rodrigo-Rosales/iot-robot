@@ -1,6 +1,6 @@
 # pc_code/control/controller.py
 
-from config import WHEEL_BASE, KP_ANGULAR, KP_LINEAR, AREA_TARGUET, MAX_PWM, MIN_PWM, KP_VERTICAL 
+from config import WHEEL_BASE, KP_ANGULAR, KP_LINEAR, AREA_TARGUET, MAX_PWM, MIN_PWM, KP_VERTICAL
 
 class Controller:
     def __init__(self):
@@ -27,9 +27,10 @@ class Controller:
         v_right = linear_speed + (self.wheel_base / 2) * angular_speed
         v_left = linear_speed - (self.wheel_base / 2) * angular_speed
 
-        # Escalar a PWM (Aproximación inicial - necesita calibración)
+        print(f"[CONTROLLER] Error X: {error_x:.2f}, Error Y: {error_y:.2f}, Area: {area:.2f}, Angular Speed: {angular_speed:.4f}, Linear Speed: {linear_speed:.4f}, V_right: {v_right:.4f}, V_left: {v_left:.4f}") # <--- IMPRESIÓN DE DIAGNÓSTICO
+
         pwm_right = v_right * 5
-        pwm_left = v_left * 5
+        pwm_left = v_left * 15
 
         # Limitar PWM
         pwm_right = max(self.min_pwm, min(self.max_pwm, pwm_right))
