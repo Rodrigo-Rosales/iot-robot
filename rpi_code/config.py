@@ -7,8 +7,8 @@ SERVER_PORT = 9999          # Puerto de conexión
 # Configuración de la cámara
 FRAME_WIDTH = 640
 FRAME_HEIGHT = 480
-JPEG_QUALITY = 70  # Calidad de la compresión JPEG
-FPS_SEND = 30  # Frames por segundo a enviar
+JPEG_QUALITY = 30  # Calidad de la compresión JPEG
+FPS_SEND = 20  # Frames por segundo a enviar
 
 # --- Configuración para recibir comandos de control ---
 RASPBERRY_PI_IP_CONTROL_RECEIVER = '0.0.0.0'

@@ -74,7 +74,7 @@ class Detector:
         fps = 1.0 / (time.time() - start_time_total)
         cv2.putText(annotated, f"FPS (detect): {fps:.1f}", (10, 60),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-        print(f"[DETECTOR] Tiempo de inferencia: {inference_time:.3f} segundos")
+        # print(f"[DETECTOR] Tiempo de inferencia: {inference_time:.3f} segundos")
 
         # Convertir de nuevo a BGR para OpenCV
         bgr_annotated = cv2.cvtColor(annotated, cv2.COLOR_RGB2BGR)

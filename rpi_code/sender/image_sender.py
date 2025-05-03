@@ -10,21 +10,20 @@ def send_frames():
     # Inicializar la cámara
     cap = cv2.VideoCapture(0)
 
-    # *** MODIFICACIÓN IMPORTANTE PARA DIAGNÓSTICO ***
     print(f"[RPI VIDEO SENDER] Resolución inicial de la cámara: {cap.get(cv2.CAP_PROP_FRAME_WIDTH)}x{cap.get(cv2.CAP_PROP_FRAME_HEIGHT)}")
 
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, FRAME_WIDTH)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT)
-    cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)  # Intenta reducir el buffer de la cámara
+    cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)  # Reducir buffer
 
-    # *** MODIFICACIÓN CRUCIAL PARA VERIFICAR LA RESOLUCIÓN DESPUÉS DE LA CONFIGURACIÓN ***
     actual_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     actual_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     print(f"[RPI VIDEO SENDER] Resolución de la cámara DESPUÉS de la configuración: {actual_width}x{actual_height}")
 
     # Inicializar socket
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)  # Deshabilitar Nagle
+    client_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+
     try:
         client_socket.connect((SERVER_IP, SERVER_PORT))
         print(f"[RPI VIDEO SENDER] Conectado a {SERVER_IP}:{SERVER_PORT}")
@@ -37,6 +36,7 @@ def send_frames():
             start_time = time.time()
             ret, frame = cap.read()
             if not ret:
+                print("[RPI VIDEO SENDER] Error al capturar frame.")
                 break
 
             # Comprimir frame a JPEG
@@ -44,7 +44,6 @@ def send_frames():
             result, encoded_image = cv2.imencode('.jpg', frame, encode_param)
             data = encoded_image.tobytes()
 
-            # Enviar longitud y luego datos
             try:
                 client_socket.sendall(struct.pack(">L", len(data)) + data)
             except Exception as e:
@@ -60,6 +59,7 @@ def send_frames():
     finally:
         cap.release()
         client_socket.close()
+        print("[RPI VIDEO SENDER] Recursos liberados.")
 
 if __name__ == '__main__':
     send_frames()
