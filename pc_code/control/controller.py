@@ -10,7 +10,7 @@ class Controller:
         self.area_target = AREA_TARGUET
         self.max_pwm = MAX_PWM
         self.min_pwm = MIN_PWM
-        self.kp_vertical = KP_VERTICAL  # Nueva ganancia para el error vertical
+        self.kp_vertical = KP_VERTICAL 
 
     def calculate_pwm(self, error_x, error_y, area):
         """Calcula los valores PWM para los motores basados en los errores de detección."""
@@ -24,17 +24,24 @@ class Controller:
         linear_speed = self.kp_linear * error_area # - self.kp_vertical * error_y
 
         # Modelo Cinemático Inverso (Velocidades de las ruedas - lineal)
-        v_right = linear_speed + (self.wheel_base / 2) * angular_speed
-        v_left = linear_speed - (self.wheel_base / 2) * angular_speed
+        v_right = linear_speed - (self.wheel_base / 2) * angular_speed
+        v_left = linear_speed + (self.wheel_base / 2) * angular_speed
 
         print(f"[CONTROLLER] Error X: {error_x:.2f}, Error Y: {error_y:.2f}, Area: {area:.2f}, Angular Speed: {angular_speed:.4f}, Linear Speed: {linear_speed:.4f}, V_right: {v_right:.4f}, V_left: {v_left:.4f}") # <--- IMPRESIÓN DE DIAGNÓSTICO
 
-        pwm_right = v_right * 5
-        pwm_left = v_left * 15
+        pwm_left = v_left * 1.1
+        pwm_right = v_right * 1.25
 
         # Limitar PWM
-        pwm_right = max(self.min_pwm, min(self.max_pwm, pwm_right))
-        pwm_left = max(self.min_pwm, min(self.max_pwm, pwm_left))
+        if pwm_right > 0:
+            pwm_right = max(self.min_pwm, min(self.max_pwm, pwm_right))
+        else:
+            pwm_right = min(self.min_pwm, max(self.max_pwm, pwm_right))
+
+        if pwm_left > 0:
+            pwm_left = max(self.min_pwm, min(self.max_pwm, pwm_left))
+        else:
+            pwm_left = min(self.min_pwm, max(self.max_pwm, pwm_left))
 
         return int(pwm_left), int(pwm_right)
 
