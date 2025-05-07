@@ -15,6 +15,9 @@ Este directorio contiene el código que se ejecuta en la Raspberry Pi 4.
 * **`motor_controller/motor_controller.py`**: Contiene la clase `MotorController` que gestiona el control de los motores del robot utilizando los pines GPIO de la Raspberry Pi y modulación por ancho de pulsos (PWM). Permite controlar la velocidad y dirección de cada motor de forma independiente.
 * **`app.py`**: Script principal que inicia los hilos para la transmisión de video (`image_sender`) y la recepción de comandos de control (`control_receiver`), coordinando la operación del robot.
 
+**Recursos Útiles para Raspberry Pi:**
+* [Documentación Oficial de Raspberry Pi](https://www.raspberrypi.com/documentation/computers/raspberry-pi.html)
+
 ### `pc_code/` (Código para PC Remota)
 
 Este directorio contiene el código que se ejecuta en la PC remota (con GPU NVIDIA para el procesamiento de IA).
@@ -24,6 +27,14 @@ Este directorio contiene el código que se ejecuta en la PC remota (con GPU NVID
 * **`sender/control_sender.py`**: Establece una conexión TCP/IP con la Raspberry Pi para enviar comandos de control (valores PWM para los motores) basados en el análisis de la detección. Los comandos se serializan en formato JSON antes de ser enviados.
 * **`control/controller.py`**: Contiene la clase `Controller`, que toma la información de la detección (error en x, error en y, área del bounding box) y calcula los valores PWM necesarios para los motores del robot utilizando un modelo cinemático diferencial y ganancias definidas.
 * **`app.py`**: Script principal que inicia el receptor de video (`image_receiver`), el detector de objetos (`detector`), el controlador (`controller`) y el emisor de comandos de control (`control_sender`) para orquestar el seguimiento autónomo.
+
+**Recursos Útiles para el Desarrollo en PC:**
+* [Documentación de YOLOv8 (Ultralytics)](https://docs.ultralytics.com/)
+* [Documentación de OpenCV](https://docs.opencv.org/4.x/)
+* [Documentación de PyTorch](https://pytorch.org/docs/stable/index.html)
+* [Documentación de la librería `socket` de Python](https://docs.python.org/3/library/socket.html)
+* [Documentación de la librería `struct` de Python](https://docs.python.org/3/library/struct.html)
+* [Documentación de la librería `json` de Python](https://docs.python.org/3/library/json.html)
 
 ### `config.py`
 
