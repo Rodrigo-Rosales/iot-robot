@@ -28,7 +28,7 @@ def main():
                     control_sender.send_control_command(0, 0)
 
                 if SHOW_RESULTS:
-                    cv2.imshow("Frame con Detección", annotated_frame)
+                    cv2.imshow("Frame con Deteccion", annotated_frame)
                     if cv2.waitKey(1) & 0xFF == ord('q'):
                         break
 
