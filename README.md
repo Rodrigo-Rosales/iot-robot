@@ -28,6 +28,8 @@ Este directorio contiene el código que se ejecuta en la PC remota (con GPU NVID
 * **`control/controller.py`**: Contiene la clase `Controller`, que toma la información de la detección (error en x, error en y, área del bounding box) y calcula los valores PWM necesarios para los motores del robot utilizando un modelo cinemático diferencial y ganancias definidas.
 * **`app.py`**: Script principal que inicia el receptor de video (`image_receiver`), el detector de objetos (`detector`), el controlador (`controller`) y el emisor de comandos de control (`control_sender`) para orquestar el seguimiento autónomo.
 
+**Nota sobre el modelo YOLOv8**: El notebook de entrenamiento del modelo de detección se encuentra en `pc_code/models/training/`. Este archivo Jupyter Notebook contiene todo el código utilizado para el entrenamiento personalizado del modelo YOLOv8 con el dataset de balones de baloncesto, incluyendo la configuración de hiperparámetros y las gráficas de evaluación.
+
 **Recursos Útiles para el Desarrollo en PC:**
 * [Documentación de YOLOv8 (Ultralytics)](https://docs.ultralytics.com/)
 * [Documentación de OpenCV](https://docs.opencv.org/4.x/)
